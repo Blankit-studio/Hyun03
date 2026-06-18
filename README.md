@@ -47,7 +47,19 @@ npx serve .
 
 브라우저에서 `http://localhost:8000` 접속.
 
-## 🌐 배포
+## 🌐 배포 (GitHub Pages)
 
-`index.html`, `styles.css`, `script.js`, `config.js`를 그대로 올리면 됩니다.
-GitHub Pages, Netlify, Vercel, Cloudflare Pages 등 정적 호스팅이면 어디든 OK.
+이 저장소에는 `/.github/workflows/deploy.yml` 자동 배포 워크플로가 포함되어 있습니다.
+**최초 1회만** 아래 설정을 해주면, 이후 푸시할 때마다 자동으로 배포됩니다.
+
+1. GitHub 저장소 → **Settings** → **Pages** 이동
+2. **Build and deployment** → **Source** 를 **GitHub Actions** 로 선택
+3. 워크플로가 동작하는 브랜치(`main` 또는 `claude/sleepy-gauss-n4t8d5`)에 푸시
+4. **Actions** 탭에서 배포 완료를 확인하면, Pages URL이 생성됩니다
+   (예: `https://<사용자명>.github.io/Hyun03/`)
+
+> 워크플로는 `main` 과 작업 브랜치 푸시 시 실행되며, Actions 탭에서 수동 실행도 가능합니다.
+
+### 다른 호스팅을 쓰려면
+`index.html`, `styles.css`, `script.js`, `config.js` 4개 파일을 그대로 올리면 됩니다.
+Netlify, Vercel, Cloudflare Pages 등 정적 호스팅이면 어디든 OK.
