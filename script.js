@@ -33,7 +33,6 @@
   }
 
   // 상태
-  let bioToken = 0;          // 진행 중인 타자기 루프 취소용
   let revealed = false;      // 입장 완료 여부
   let current = {};          // 현재 프로필
 
@@ -129,44 +128,25 @@
     // 조회수
     if (cfg.showViews) $("views").hidden = false; else $("views").hidden = true;
 
-    // 입장이 끝난 상태에서 데이터가 갱신되면 애니메이션 재실행
-    if (revealed) { startBio(); animateLinks(); }
+    // 바이오 렌더 (정적)
+    renderBio();
+
+    // 입장이 끝난 뒤 데이터가 갱신되면 링크를 즉시 표시(재애니메이션 없음)
+    if (revealed) document.querySelectorAll(".link").forEach((el) => el.classList.add("in"));
   }
 
-  // ---------- 링크 순차 등장 ----------
+  // ---------- 링크 첫 등장 (1회) ----------
   function animateLinks() {
     document.querySelectorAll(".link").forEach((el, i) => {
-      el.classList.remove("in");
-      setTimeout(() => el.classList.add("in"), 110 * i + 150);
+      setTimeout(() => el.classList.add("in"), 60 * i + 80);
     });
   }
 
-  // ---------- 바이오 타자기 ----------
-  function startBio() {
+  // ---------- 바이오 (정적 표시) ----------
+  function renderBio() {
     const target = $("bio-text");
-    const caret = document.querySelector(".caret");
     const lines = Array.isArray(current.bio) ? current.bio : (current.bio ? [current.bio] : []);
-    const myToken = ++bioToken;
-    target.textContent = "";
-    if (!lines.length) { if (caret) caret.style.display = "none"; return; }
-    if (caret) caret.style.display = "";
-    let li = 0, ci = 0, deleting = false;
-    function tick() {
-      if (myToken !== bioToken) return;       // 취소됨
-      const full = lines[li];
-      if (!deleting) {
-        target.textContent = full.slice(0, ++ci);
-        if (ci === full.length) {
-          if (lines.length === 1) return;
-          deleting = true; return setTimeout(tick, 1600);
-        }
-      } else {
-        target.textContent = full.slice(0, --ci);
-        if (ci === 0) { deleting = false; li = (li + 1) % lines.length; }
-      }
-      setTimeout(tick, deleting ? 45 : 75);
-    }
-    tick();
+    target.textContent = lines.filter(Boolean).join("  ·  ");
   }
 
   // ---------- 조회수 카운터 (localStorage) ----------
@@ -184,7 +164,6 @@
     revealed = true;
     $("enter-screen").classList.add("hidden");
     $("app").classList.add("show");
-    startBio();
     animateLinks();
     bumpViews();
     const audio = $("audio");
@@ -200,51 +179,9 @@
     else { audio.pause(); t.textContent = "▶"; }
   });
 
-  // ---------- 효과 (1회 초기화) ----------
-  function initEffects() {
-    // 카드 3D 기울기
-    const card = $("card");
-    window.addEventListener("mousemove", (e) => {
-      if (!revealed || !(current.effects && current.effects.tilt)) return;
-      const r = card.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      card.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
-    });
-    window.addEventListener("mouseleave", () => { card.style.transform = ""; });
-
-    // 반짝임
-    const canvas = $("sparkle-canvas"), ctx = canvas.getContext("2d");
-    let parts = [];
-    const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; };
-    resize(); window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", (e) => {
-      if (!(current.effects && current.effects.sparkles)) return;
-      for (let i = 0; i < 2; i++) {
-        parts.push({ x: e.clientX, y: e.clientY, vx: (Math.random() - 0.5) * 1.5,
-          vy: (Math.random() - 0.5) * 1.5, life: 1, size: Math.random() * 2.5 + 1 });
-      }
-      if (parts.length > 200) parts = parts.slice(-200);
-    });
-    (function loop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const accent = getComputedStyle(root).getPropertyValue("--accent2").trim() || "#22d3ee";
-      parts.forEach((p) => {
-        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
-        ctx.globalAlpha = Math.max(0, p.life);
-        ctx.fillStyle = accent;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-      });
-      parts = parts.filter((p) => p.life > 0);
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(loop);
-    })();
-  }
-
   // ---------- 부팅 ----------
   function boot() {
     applyProfile(window.PROFILE_CONFIG || {}); // 즉시 기본값 렌더
-    initEffects();
 
     const es = $("enter-screen");
     const enableEnter = !(current.enterScreen && current.enterScreen.enabled === false);
