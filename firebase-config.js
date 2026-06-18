@@ -7,12 +7,13 @@
 //   → "SDK 설정 및 구성"의 firebaseConfig 객체를 그대로 복사해 붙여넣기
 // ============================================================
 window.FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBHDbNTM5jwpYJtf5pqbSTrbvkYNO6zcQY",
+  authDomain: "status-f9a7c.firebaseapp.com",
+  projectId: "status-f9a7c",
+  storageBucket: "status-f9a7c.firebasestorage.app",
+  messagingSenderId: "489179068121",
+  appId: "1:489179068121:web:4f232088e6c07bf9b4b0c8",
+  measurementId: "G-5CYBT5TW6C",
 };
 
 // 편집 권한을 가질 "관리자(나)"의 Google 계정 이메일.
