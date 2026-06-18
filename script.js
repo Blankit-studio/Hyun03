@@ -47,7 +47,6 @@
       avatar: p.avatar ?? d.avatar ?? "",
       theme: Object.assign({}, d.theme, p.theme),
       background: Object.assign({}, d.background, p.background),
-      enterScreen: Object.assign({}, d.enterScreen, p.enterScreen),
       showViews: p.showViews ?? d.showViews ?? false,
       effects: Object.assign({}, d.effects, p.effects),
       links: p.links ?? d.links ?? [],
@@ -149,7 +148,6 @@
   function reveal() {
     if (revealed) return;
     revealed = true;
-    $("enter-screen").classList.add("hidden");
     $("app").classList.add("show");
     animateLinks();
     bumpViews();
@@ -158,16 +156,7 @@
   // ---------- 부팅 ----------
   function boot() {
     applyProfile(window.PROFILE_CONFIG || {}); // 즉시 기본값 렌더
-
-    const es = $("enter-screen");
-    const enableEnter = !(current.enterScreen && current.enterScreen.enabled === false);
-    if (current.enterScreen && current.enterScreen.text) es.querySelector(".enter-text").textContent = current.enterScreen.text;
-    if (enableEnter) {
-      es.addEventListener("click", reveal, { once: true });
-    } else {
-      es.style.display = "none";
-      reveal();
-    }
+    reveal(); // 입장 화면 없이 바로 표시
   }
 
   // 외부(Firebase 모듈)에서 사용할 API 노출

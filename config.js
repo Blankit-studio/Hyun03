@@ -26,12 +26,6 @@ window.PROFILE_CONFIG = {
     dim: 0.55,               // 어둡게(0~1)
   },
 
-  // 입장 화면 ("click to enter")
-  enterScreen: {
-    enabled: true,
-    text: "클릭해서 입장하기",
-  },
-
   // 조회수 표시 여부 (브라우저 localStorage 기반의 간단한 카운터)
   showViews: true,
 
