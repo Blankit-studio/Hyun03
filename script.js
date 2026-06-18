@@ -1,8 +1,6 @@
 (function () {
   "use strict";
 
-  const cfg = window.PROFILE_CONFIG || {};
-
   // ---------- SVG 아이콘 모음 ----------
   const ICONS = {
     github: '<path d="M12 .5C5.4.5 0 5.9 0 12.6c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5 18.3 5.3 18.3 5.3c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 24 12.6C24 5.9 18.6.5 12 .5z"/>',
@@ -24,138 +22,137 @@
     website: '<path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm8.9 7h-3.4a15.6 15.6 0 0 0-1.4-3.6A9.6 9.6 0 0 1 20.9 7zM12 2.3a13.9 13.9 0 0 1 2 4.7h-4a13.9 13.9 0 0 1 2-4.7zM2.6 14a9.5 9.5 0 0 1 0-4h3.9a18 18 0 0 0 0 4zm.9 2.4h3.4a15.6 15.6 0 0 0 1.4 3.6A9.6 9.6 0 0 1 3.5 16.4zm3.4-9.4H3.5a9.6 9.6 0 0 1 4.8-3.6A15.6 15.6 0 0 0 7 7zM12 21.7a13.9 13.9 0 0 1-2-4.7h4a13.9 13.9 0 0 1-2 4.7zm2.5-7.3h-5a16.2 16.2 0 0 1 0-4h5a16.2 16.2 0 0 1 0 4zm.2 5.6a15.6 15.6 0 0 0 1.4-3.6h3.4a9.6 9.6 0 0 1-4.8 3.6zm2.8-6h3.9a9.5 9.5 0 0 1 0 4h-3.9a18 18 0 0 0 0-4z"/>',
     link: '<path d="M3.9 12a3.1 3.1 0 0 1 3.1-3.1h4V7h-4a5 5 0 0 0 0 10h4v-1.9h-4A3.1 3.1 0 0 1 3.9 12zM8 13h8v-2H8v2zm5-6v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10h-4z"/>',
   };
-  ICONS.threads = ICONS.threads; // alias safety
   const aliasIcon = { tweet: "x" };
-  function getIcon(name) {
-    const key = aliasIcon[name] || name;
-    return ICONS[key] || ICONS.link;
-  }
+  function getIcon(name) { return ICONS[aliasIcon[name] || name] || ICONS.link; }
 
-  // ---------- 테마 적용 ----------
   const root = document.documentElement;
-  if (cfg.theme) {
-    if (cfg.theme.accent) root.style.setProperty("--accent", cfg.theme.accent);
-    if (cfg.theme.accent2) root.style.setProperty("--accent2", cfg.theme.accent2);
-    if (cfg.theme.background) root.style.setProperty("--bg", cfg.theme.background);
-  }
+  const $ = (id) => document.getElementById(id);
 
-  // ---------- 배경 ----------
-  const bg = document.getElementById("bg");
-  const bgCfg = cfg.background || { type: "gradient" };
-  root.style.setProperty("--bg-blur", (bgCfg.blur ?? 6) + "px");
-  root.style.setProperty("--dim", String(bgCfg.dim ?? 0.5));
-  if (bgCfg.type === "image" && bgCfg.src) {
-    bg.style.backgroundImage = `url("${bgCfg.src}")`;
-  } else if (bgCfg.type === "video" && bgCfg.src) {
-    const v = document.createElement("video");
-    v.src = bgCfg.src; v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
-    bg.appendChild(v);
-  } else {
-    bg.classList.add("gradient");
-  }
-
-  // ---------- 아바타 ----------
-  const avatarImg = document.getElementById("avatar-img");
-  const avatarFallback = document.getElementById("avatar-fallback");
-  if (cfg.avatar) {
-    avatarImg.src = cfg.avatar;
-    avatarImg.hidden = false;
-    avatarFallback.hidden = true;
-    avatarImg.onerror = () => { avatarImg.hidden = true; showFallback(); };
-  } else {
-    showFallback();
-  }
-  function showFallback() {
-    avatarFallback.hidden = false;
-    avatarFallback.textContent = (cfg.username || "?").trim().charAt(0).toUpperCase();
-  }
-
-  // ---------- 이름 / 인증 뱃지 ----------
-  document.getElementById("username-text").textContent = cfg.username || "username";
-  if (cfg.verified) document.getElementById("verified-badge").hidden = false;
-  document.title = (cfg.username || "내 링크") + " · 링크 모음";
-
-  // ---------- 링크 렌더링 ----------
-  const linksEl = document.getElementById("links");
-  (cfg.links || []).forEach((l) => {
-    const a = document.createElement("a");
-    a.className = "link";
-    a.href = l.url;
-    a.target = l.url.startsWith("mailto:") ? "_self" : "_blank";
-    a.rel = "noopener noreferrer";
-    a.innerHTML =
-      `<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${getIcon(l.icon)}</svg>` +
-      `<span class="label">${escapeHtml(l.label || l.icon)}</span>` +
-      `<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>`;
-    linksEl.appendChild(a);
-  });
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  // ---------- 음악 ----------
-  const music = cfg.music || {};
-  if (music.src) {
-    const player = document.getElementById("music-player");
-    const audio = document.getElementById("audio");
-    const toggle = document.getElementById("music-toggle");
-    audio.src = music.src;
-    document.getElementById("music-title").textContent = music.title || "Now Playing";
-    document.getElementById("music-artist").textContent = music.artist || "";
-    player.hidden = false;
-    toggle.addEventListener("click", () => {
-      if (audio.paused) { audio.play(); toggle.textContent = "❚❚"; }
-      else { audio.pause(); toggle.textContent = "▶"; }
-    });
-    window._musicAudio = audio;
+  // 상태
+  let bioToken = 0;          // 진행 중인 타자기 루프 취소용
+  let revealed = false;      // 입장 완료 여부
+  let current = {};          // 현재 프로필
+
+  // 기본 프로필 (config.js) 과 병합
+  function withDefaults(p) {
+    const d = window.PROFILE_CONFIG || {};
+    p = p || {};
+    return {
+      username: p.username ?? d.username ?? "username",
+      verified: p.verified ?? d.verified ?? false,
+      bio: p.bio ?? d.bio ?? [],
+      avatar: p.avatar ?? d.avatar ?? "",
+      theme: Object.assign({}, d.theme, p.theme),
+      background: Object.assign({}, d.background, p.background),
+      enterScreen: Object.assign({}, d.enterScreen, p.enterScreen),
+      music: Object.assign({}, d.music, p.music),
+      showViews: p.showViews ?? d.showViews ?? false,
+      effects: Object.assign({}, d.effects, p.effects),
+      links: p.links ?? d.links ?? [],
+    };
   }
 
-  // ---------- 조회수 (localStorage) ----------
-  if (cfg.showViews) {
-    const key = "profile_views_" + (cfg.username || "default");
-    let n = parseInt(localStorage.getItem(key) || "0", 10) + 1;
-    localStorage.setItem(key, String(n));
-    document.getElementById("views").hidden = false;
-    document.getElementById("views-count").textContent = n.toLocaleString();
-  }
+  // ---------- 프로필 적용 (재호출 가능) ----------
+  function applyProfile(raw) {
+    const cfg = withDefaults(raw);
+    current = cfg;
 
-  // ---------- 입장 화면 + 진입 ----------
-  const enterScreen = document.getElementById("enter-screen");
-  const app = document.getElementById("app");
-  const enterText = enterScreen.querySelector(".enter-text");
-  if (cfg.enterScreen && cfg.enterScreen.text) enterText.textContent = cfg.enterScreen.text;
+    // 테마
+    if (cfg.theme.accent) root.style.setProperty("--accent", cfg.theme.accent);
+    if (cfg.theme.accent2) root.style.setProperty("--accent2", cfg.theme.accent2);
+    if (cfg.theme.background) root.style.setProperty("--bg", cfg.theme.background);
 
-  function reveal() {
-    enterScreen.classList.add("hidden");
-    app.classList.add("show");
-    startBio();
-    animateLinks();
-    if (window._musicAudio) {
-      const t = document.getElementById("music-toggle");
-      window._musicAudio.play().then(() => { t.textContent = "❚❚"; }).catch(() => {});
+    // 배경
+    const bg = $("bg");
+    const b = cfg.background || { type: "gradient" };
+    root.style.setProperty("--bg-blur", (b.blur ?? 6) + "px");
+    root.style.setProperty("--dim", String(b.dim ?? 0.5));
+    bg.className = "bg";
+    bg.style.backgroundImage = "";
+    bg.innerHTML = "";
+    if (b.type === "image" && b.src) {
+      bg.style.backgroundImage = `url("${b.src}")`;
+    } else if (b.type === "video" && b.src) {
+      const v = document.createElement("video");
+      v.src = b.src; v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
+      bg.appendChild(v);
+    } else {
+      bg.classList.add("gradient");
     }
-  }
-  if (cfg.enterScreen && cfg.enterScreen.enabled === false) {
-    enterScreen.style.display = "none";
-    reveal();
-  } else {
-    enterScreen.addEventListener("click", reveal, { once: true });
+
+    // 아바타
+    const img = $("avatar-img"), fb = $("avatar-fallback");
+    if (cfg.avatar) {
+      img.src = cfg.avatar; img.hidden = false; fb.hidden = true;
+      img.onerror = () => { img.hidden = true; fb.hidden = false; fb.textContent = (cfg.username || "?").charAt(0).toUpperCase(); };
+    } else {
+      img.hidden = true; fb.hidden = false; fb.textContent = (cfg.username || "?").charAt(0).toUpperCase();
+    }
+
+    // 이름 / 뱃지
+    $("username-text").textContent = cfg.username;
+    $("verified-badge").hidden = !cfg.verified;
+    document.title = cfg.username + " · 링크 모음";
+
+    // 링크
+    const linksEl = $("links");
+    linksEl.innerHTML = "";
+    (cfg.links || []).forEach((l) => {
+      const a = document.createElement("a");
+      a.className = "link";
+      a.href = l.url || "#";
+      a.target = (l.url || "").startsWith("mailto:") ? "_self" : "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerHTML =
+        `<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${getIcon(l.icon)}</svg>` +
+        `<span class="label">${escapeHtml(l.label || l.icon || "링크")}</span>` +
+        `<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>`;
+      linksEl.appendChild(a);
+    });
+
+    // 음악
+    const player = $("music-player");
+    if (cfg.music && cfg.music.src) {
+      const audio = $("audio");
+      if (audio.src !== cfg.music.src) audio.src = cfg.music.src;
+      $("music-title").textContent = cfg.music.title || "Now Playing";
+      $("music-artist").textContent = cfg.music.artist || "";
+      player.hidden = false;
+    } else {
+      player.hidden = true;
+    }
+
+    // 조회수
+    if (cfg.showViews) $("views").hidden = false; else $("views").hidden = true;
+
+    // 입장이 끝난 상태에서 데이터가 갱신되면 애니메이션 재실행
+    if (revealed) { startBio(); animateLinks(); }
   }
 
   // ---------- 링크 순차 등장 ----------
   function animateLinks() {
     document.querySelectorAll(".link").forEach((el, i) => {
-      setTimeout(() => el.classList.add("in"), 120 * i + 200);
+      el.classList.remove("in");
+      setTimeout(() => el.classList.add("in"), 110 * i + 150);
     });
   }
 
-  // ---------- 바이오 타자기 효과 ----------
+  // ---------- 바이오 타자기 ----------
   function startBio() {
-    const target = document.getElementById("bio-text");
-    const lines = Array.isArray(cfg.bio) ? cfg.bio : (cfg.bio ? [cfg.bio] : []);
-    if (!lines.length) { document.querySelector(".caret").style.display = "none"; return; }
+    const target = $("bio-text");
+    const caret = document.querySelector(".caret");
+    const lines = Array.isArray(current.bio) ? current.bio : (current.bio ? [current.bio] : []);
+    const myToken = ++bioToken;
+    target.textContent = "";
+    if (!lines.length) { if (caret) caret.style.display = "none"; return; }
+    if (caret) caret.style.display = "";
     let li = 0, ci = 0, deleting = false;
     function tick() {
+      if (myToken !== bioToken) return;       // 취소됨
       const full = lines[li];
       if (!deleting) {
         target.textContent = full.slice(0, ++ci);
@@ -172,28 +169,57 @@
     tick();
   }
 
-  // ---------- 카드 3D 기울기 ----------
-  if (cfg.effects && cfg.effects.tilt) {
-    const card = document.getElementById("card");
+  // ---------- 조회수 카운터 (localStorage) ----------
+  function bumpViews() {
+    if (!current.showViews) return;
+    const key = "profile_views_" + (current.username || "default");
+    let n = parseInt(localStorage.getItem(key) || "0", 10) + 1;
+    localStorage.setItem(key, String(n));
+    $("views-count").textContent = n.toLocaleString();
+  }
+
+  // ---------- 입장 ----------
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
+    $("enter-screen").classList.add("hidden");
+    $("app").classList.add("show");
+    startBio();
+    animateLinks();
+    bumpViews();
+    const audio = $("audio");
+    if (current.music && current.music.src) {
+      audio.play().then(() => { $("music-toggle").textContent = "❚❚"; }).catch(() => {});
+    }
+  }
+
+  // ---------- 음악 토글 ----------
+  $("music-toggle").addEventListener("click", () => {
+    const audio = $("audio"), t = $("music-toggle");
+    if (audio.paused) { audio.play(); t.textContent = "❚❚"; }
+    else { audio.pause(); t.textContent = "▶"; }
+  });
+
+  // ---------- 효과 (1회 초기화) ----------
+  function initEffects() {
+    // 카드 3D 기울기
+    const card = $("card");
     window.addEventListener("mousemove", (e) => {
-      if (!app.classList.contains("show")) return;
+      if (!revealed || !(current.effects && current.effects.tilt)) return;
       const r = card.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
       card.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
     });
     window.addEventListener("mouseleave", () => { card.style.transform = ""; });
-  }
 
-  // ---------- 반짝임 효과 ----------
-  if (cfg.effects && cfg.effects.sparkles) {
-    const canvas = document.getElementById("sparkle-canvas");
-    const ctx = canvas.getContext("2d");
+    // 반짝임
+    const canvas = $("sparkle-canvas"), ctx = canvas.getContext("2d");
     let parts = [];
-    function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+    const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; };
     resize(); window.addEventListener("resize", resize);
-    const accent = getComputedStyle(root).getPropertyValue("--accent2").trim() || "#22d3ee";
     window.addEventListener("mousemove", (e) => {
+      if (!(current.effects && current.effects.sparkles)) return;
       for (let i = 0; i < 2; i++) {
         parts.push({ x: e.clientX, y: e.clientY, vx: (Math.random() - 0.5) * 1.5,
           vy: (Math.random() - 0.5) * 1.5, life: 1, size: Math.random() * 2.5 + 1 });
@@ -202,6 +228,7 @@
     });
     (function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const accent = getComputedStyle(root).getPropertyValue("--accent2").trim() || "#22d3ee";
       parts.forEach((p) => {
         p.x += p.vx; p.y += p.vy; p.life -= 0.02;
         ctx.globalAlpha = Math.max(0, p.life);
@@ -213,4 +240,31 @@
       requestAnimationFrame(loop);
     })();
   }
+
+  // ---------- 부팅 ----------
+  function boot() {
+    applyProfile(window.PROFILE_CONFIG || {}); // 즉시 기본값 렌더
+    initEffects();
+
+    const es = $("enter-screen");
+    const enableEnter = !(current.enterScreen && current.enterScreen.enabled === false);
+    if (current.enterScreen && current.enterScreen.text) es.querySelector(".enter-text").textContent = current.enterScreen.text;
+    if (enableEnter) {
+      es.addEventListener("click", reveal, { once: true });
+    } else {
+      es.style.display = "none";
+      reveal();
+    }
+  }
+
+  // 외부(Firebase 모듈)에서 사용할 API 노출
+  window.LinkSite = {
+    ICONS,
+    iconNames: Object.keys(ICONS),
+    applyProfile,
+    getProfile: () => current,
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
 })();
