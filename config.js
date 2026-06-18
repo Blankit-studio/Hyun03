@@ -32,13 +32,6 @@ window.PROFILE_CONFIG = {
     text: "클릭해서 입장하기",
   },
 
-  // 배경 음악 (선택). src 를 비워두면 표시되지 않습니다.
-  music: {
-    src: "",                 // 예: "music/song.mp3"
-    title: "",
-    artist: "",
-  },
-
   // 조회수 표시 여부 (브라우저 localStorage 기반의 간단한 카운터)
   showViews: true,
 

@@ -48,7 +48,6 @@
       theme: Object.assign({}, d.theme, p.theme),
       background: Object.assign({}, d.background, p.background),
       enterScreen: Object.assign({}, d.enterScreen, p.enterScreen),
-      music: Object.assign({}, d.music, p.music),
       showViews: p.showViews ?? d.showViews ?? false,
       effects: Object.assign({}, d.effects, p.effects),
       links: p.links ?? d.links ?? [],
@@ -113,18 +112,6 @@
       linksEl.appendChild(a);
     });
 
-    // 음악
-    const player = $("music-player");
-    if (cfg.music && cfg.music.src) {
-      const audio = $("audio");
-      if (audio.src !== cfg.music.src) audio.src = cfg.music.src;
-      $("music-title").textContent = cfg.music.title || "Now Playing";
-      $("music-artist").textContent = cfg.music.artist || "";
-      player.hidden = false;
-    } else {
-      player.hidden = true;
-    }
-
     // 조회수
     if (cfg.showViews) $("views").hidden = false; else $("views").hidden = true;
 
@@ -166,18 +153,7 @@
     $("app").classList.add("show");
     animateLinks();
     bumpViews();
-    const audio = $("audio");
-    if (current.music && current.music.src) {
-      audio.play().then(() => { $("music-toggle").textContent = "❚❚"; }).catch(() => {});
-    }
   }
-
-  // ---------- 음악 토글 ----------
-  $("music-toggle").addEventListener("click", () => {
-    const audio = $("audio"), t = $("music-toggle");
-    if (audio.paused) { audio.play(); t.textContent = "❚❚"; }
-    else { audio.pause(); t.textContent = "▶"; }
-  });
 
   // ---------- 부팅 ----------
   function boot() {
