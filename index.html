@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 링크 모음</title>
+  <meta name="description" content="제 모든 링크를 한 곳에 모았어요." />
+  <meta property="og:title" content="내 링크 모음" />
+  <meta property="og:description" content="제 모든 링크를 한 곳에 모았어요." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- 배경 -->
+  <div id="bg" class="bg"></div>
+  <div class="bg-overlay"></div>
+
+  <!-- 입장 화면 -->
+  <div id="enter-screen" class="enter-screen">
+    <div class="enter-inner">
+      <div class="enter-text">클릭해서 입장하기</div>
+      <div class="enter-hint">click to enter</div>
+    </div>
+  </div>
+
+  <!-- 메인 카드 -->
+  <main id="app" class="app">
+    <section class="card" id="card">
+      <div class="card-glow"></div>
+
+      <div class="avatar-wrap">
+        <img id="avatar-img" class="avatar" alt="프로필 이미지" hidden />
+        <div id="avatar-fallback" class="avatar avatar-fallback"></div>
+      </div>
+
+      <h1 class="username">
+        <span id="username-text"></span>
+        <svg id="verified-badge" class="badge" viewBox="0 0 24 24" hidden aria-label="인증됨">
+          <path fill="currentColor" d="M12 1l2.4 2.1 3.1-.5 1.2 2.9 2.9 1.2-.5 3.1L23 12l-2.1 2.4.5 3.1-2.9 1.2-1.2 2.9-3.1-.5L12 23l-2.4-2.1-3.1.5-1.2-2.9L2.4 16.3l.5-3.1L1 12l2.1-2.4-.5-3.1 2.9-1.2L6.7 2.4l3.1.5z"/>
+          <path fill="#0a0a0f" d="M10.6 14.6l-2.3-2.3 1.1-1.1 1.2 1.2 3.2-3.2 1.1 1.1z"/>
+        </svg>
+      </h1>
+
+      <p class="bio"><span id="bio-text"></span><span class="caret">|</span></p>
+
+      <div id="links" class="links"></div>
+
+      <div class="footer">
+        <span id="views" class="views" hidden>👁 <b id="views-count">0</b> 조회</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- 음악 플레이어 -->
+  <div id="music-player" class="music-player" hidden>
+    <button id="music-toggle" class="music-toggle" aria-label="음악 재생/정지">▶</button>
+    <div class="music-meta">
+      <div id="music-title" class="music-title"></div>
+      <div id="music-artist" class="music-artist"></div>
+    </div>
+    <audio id="audio" loop></audio>
+  </div>
+
+  <canvas id="sparkle-canvas" class="sparkle-canvas"></canvas>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
