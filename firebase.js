@@ -137,13 +137,27 @@ async function boot() {
     const linksWrap = panel.querySelector("#ep-links");
     (p.links || []).forEach((l) => linksWrap.appendChild(linkRow(l)));
 
+    // 항상 마지막에 빈 입력 줄을 하나 유지 → 입력하면 자동으로 새 줄 추가
+    function ensureTrailingRow() {
+      const rows = [...linksWrap.querySelectorAll(".ep-link-row")];
+      const last = rows[rows.length - 1];
+      const lastEmpty = last &&
+        !last.querySelector(".ep-label").value.trim() &&
+        !last.querySelector(".ep-url").value.trim();
+      if (!last || !lastEmpty) linksWrap.appendChild(linkRow({ icon: "link", label: "", url: "" }));
+    }
+    ensureTrailingRow();
+
     panel.querySelector(".ep-close").onclick = closeEditor;
-    panel.querySelector("#ep-add").onclick = () => linksWrap.appendChild(linkRow({ icon: "link", label: "", url: "" }));
+    panel.querySelector("#ep-add").onclick = () => { linksWrap.appendChild(linkRow({ icon: "link", label: "", url: "" })); };
     panel.querySelector("#ep-logout").onclick = async () => { await signOut(auth); closeEditor(); };
     panel.querySelector("#ep-save").onclick = () => save(panel);
 
-    // 실시간 미리보기 (입력 시 즉시 화면 반영)
-    panel.addEventListener("input", () => window.LinkSite.applyProfile(collect(panel)));
+    // 입력 시: 빈 줄 자동 보충 + 실시간 미리보기
+    panel.addEventListener("input", () => {
+      ensureTrailingRow();
+      window.LinkSite.applyProfile(collect(panel));
+    });
   }
 
   function linkRow(l) {
