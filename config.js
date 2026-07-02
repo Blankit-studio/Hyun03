@@ -1,46 +1,14 @@
 // ============================================================
-//  프로필 설정 — 이 파일만 수정하면 사이트가 바뀝니다.
+//  사이트 전역 설정 (랜딩 페이지 문구 등)
 // ============================================================
-window.PROFILE_CONFIG = {
-  // 기본 정보
-  username: "hyun03",
-  // 프로필 이름 옆에 붙는 인증 뱃지 표시 여부
-  verified: true,
-  // 여러 줄을 적으면 가운뎃점(·)으로 이어 한 줄로 표시됩니다.
-  bio: ["환영합니다 👋", "제 링크들을 모아뒀어요"],
-  // 아바타 이미지 경로(로컬 파일 또는 URL). 비워두면 이니셜로 표시됩니다.
-  avatar: "",
+window.SITE_CONFIG = {
+  name: "링크인",                                   // 사이트 이름
+  tagline: "나만의 링크 페이지를 만들어 공유하세요",   // 랜딩 소개 문구
+};
 
-  // 색상 테마 (CSS 변수로 적용)
-  theme: {
-    accent: "#7c5cff",       // 강조 색
-    accent2: "#22d3ee",      // 보조 색 (그라데이션)
-    background: "#0a0a0f",    // 배경 색
-  },
-
-  // 배경 설정: type 은 "gradient" | "image" | "video"
-  background: {
-    type: "gradient",
-    src: "",                 // image/video 일 때 경로
-    blur: 6,                 // 배경 블러 정도(px)
-    dim: 0.55,               // 어둡게(0~1)
-  },
-
-  // 조회수 표시 여부 (브라우저 localStorage 기반의 간단한 카운터)
-  showViews: true,
-
-  // ----------------------------------------------------------
-  //  링크 목록
-  //  icon 은 아래 지원 목록 중 하나를 사용하세요:
-  //  github, instagram, twitter, x, youtube, tiktok, discord,
-  //  twitch, linkedin, facebook, telegram, spotify, email,
-  //  website, soundcloud, kakao, threads, link
-  // ----------------------------------------------------------
-  links: [
-    { icon: "github",    label: "GitHub",    url: "https://github.com/" },
-    { icon: "instagram", label: "Instagram", url: "https://instagram.com/" },
-    { icon: "youtube",   label: "YouTube",   url: "https://youtube.com/" },
-    { icon: "discord",   label: "Discord",   url: "https://discord.com/" },
-    { icon: "email",     label: "이메일",     url: "mailto:hello@example.com" },
-  ],
+// 프로필 기본 테마 (새 프로필 생성 시 초기값)
+window.DEFAULT_THEME = {
+  accent: "#7c5cff",
+  accent2: "#22d3ee",
+  background: "#0a0a0f",
 };

@@ -1,3 +1,7 @@
+// ============================================================
+//  프로필 카드 렌더러 — window.LinkSite 로 노출
+//  (profile.html 에서 사용. 데이터는 외부(profile.js)가 주입)
+// ============================================================
 (function () {
   "use strict";
 
@@ -27,44 +31,41 @@
 
   const root = document.documentElement;
   const $ = (id) => document.getElementById(id);
-
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  // 상태
-  let revealed = false;      // 입장 완료 여부
-  let current = {};          // 현재 프로필
+  const DEFAULT_THEME = window.DEFAULT_THEME || { accent: "#7c5cff", accent2: "#22d3ee", background: "#0a0a0f" };
+  let revealed = false;
+  let current = {};
 
-  // 기본 프로필 (config.js) 과 병합
   function withDefaults(p) {
-    const d = window.PROFILE_CONFIG || {};
     p = p || {};
     return {
-      username: p.username ?? d.username ?? "username",
-      verified: p.verified ?? d.verified ?? false,
-      bio: p.bio ?? d.bio ?? [],
-      avatar: p.avatar ?? d.avatar ?? "",
-      theme: Object.assign({}, d.theme, p.theme),
-      background: Object.assign({}, d.background, p.background),
-      showViews: p.showViews ?? d.showViews ?? false,
-      links: p.links ?? d.links ?? [],
+      username: p.username || "",
+      displayName: p.displayName || p.username || "이름 없음",
+      verified: !!p.verified,
+      bio: p.bio || [],
+      avatar: p.avatar || "",
+      theme: Object.assign({}, DEFAULT_THEME, p.theme),
+      background: Object.assign({ type: "gradient", blur: 6, dim: 0.5 }, p.background),
+      showViews: !!p.showViews,
+      links: p.links || [],
     };
   }
 
-  // ---------- 프로필 적용 (재호출 가능) ----------
+  // ---------- 프로필 적용 ----------
   function applyProfile(raw) {
     const cfg = withDefaults(raw);
     current = cfg;
 
-    // 테마
     if (cfg.theme.accent) root.style.setProperty("--accent", cfg.theme.accent);
     if (cfg.theme.accent2) root.style.setProperty("--accent2", cfg.theme.accent2);
     if (cfg.theme.background) root.style.setProperty("--bg", cfg.theme.background);
 
     // 배경
     const bg = $("bg");
-    const b = cfg.background || { type: "gradient" };
+    const b = cfg.background;
     root.style.setProperty("--bg-blur", (b.blur ?? 6) + "px");
     root.style.setProperty("--dim", String(b.dim ?? 0.5));
     bg.className = "bg";
@@ -82,28 +83,31 @@
 
     // 아바타
     const img = $("avatar-img"), fb = $("avatar-fallback");
+    const initial = (cfg.displayName || cfg.username || "?").trim().charAt(0).toUpperCase();
     if (cfg.avatar) {
       img.src = cfg.avatar; img.hidden = false; fb.hidden = true;
-      img.onerror = () => { img.hidden = true; fb.hidden = false; fb.textContent = (cfg.username || "?").charAt(0).toUpperCase(); };
+      img.onerror = () => { img.hidden = true; fb.hidden = false; fb.textContent = initial; };
     } else {
-      img.hidden = true; fb.hidden = false; fb.textContent = (cfg.username || "?").charAt(0).toUpperCase();
+      img.hidden = true; fb.hidden = false; fb.textContent = initial;
     }
 
-    // 이름 / 뱃지
-    $("username-text").textContent = cfg.username;
+    // 이름 / 핸들 / 뱃지
+    $("username-text").textContent = cfg.displayName;
     $("verified-badge").hidden = !cfg.verified;
-    document.title = cfg.username + " · 링크 모음";
+    const handleEl = $("handle");
+    if (handleEl) { handleEl.textContent = cfg.username ? "@" + cfg.username : ""; handleEl.hidden = !cfg.username; }
+    document.title = cfg.displayName + (cfg.username ? " (@" + cfg.username + ")" : "");
 
     // 링크
     const linksEl = $("links");
     linksEl.innerHTML = "";
-    if (!(cfg.links || []).length) {
+    if (!cfg.links.length) {
       const d = document.createElement("div");
       d.className = "links-empty";
       d.textContent = "등록된 링크가 없습니다";
       linksEl.appendChild(d);
     }
-    (cfg.links || []).forEach((l) => {
+    cfg.links.forEach((l) => {
       const a = document.createElement("a");
       a.className = "link";
       a.href = l.url || "#";
@@ -116,31 +120,21 @@
       linksEl.appendChild(a);
     });
 
-    // 조회수
-    if (cfg.showViews) $("views").hidden = false; else $("views").hidden = true;
-
-    // 바이오 렌더 (정적)
+    $("views").hidden = !cfg.showViews;
     renderBio();
-
-    // 입장이 끝난 뒤 데이터가 갱신되면 링크를 즉시 표시(재애니메이션 없음)
     if (revealed) document.querySelectorAll(".link").forEach((el) => el.classList.add("in"));
   }
 
-  // ---------- 링크 첫 등장 (1회) ----------
   function animateLinks() {
     document.querySelectorAll(".link").forEach((el, i) => {
       setTimeout(() => el.classList.add("in"), 60 * i + 80);
     });
   }
-
-  // ---------- 바이오 (정적 표시) ----------
   function renderBio() {
     const target = $("bio-text");
     const lines = Array.isArray(current.bio) ? current.bio : (current.bio ? [current.bio] : []);
     target.textContent = lines.filter(Boolean).join("  ·  ");
   }
-
-  // ---------- 조회수 카운터 (localStorage) ----------
   function bumpViews() {
     if (!current.showViews) return;
     const key = "profile_views_" + (current.username || "default");
@@ -149,37 +143,19 @@
     $("views-count").textContent = n.toLocaleString();
   }
 
-  // ---------- 입장 ----------
   function reveal() {
     if (revealed) return;
     revealed = true;
-    // 첫 페인트 이후에 클래스를 붙여야 페이드인 트랜지션이 확실히 동작
     requestAnimationFrame(() => requestAnimationFrame(() => $("app").classList.add("show")));
     animateLinks();
     bumpViews();
   }
 
-  // ---------- 부팅 ----------
-  function boot() {
-    // 마지막으로 본 프로필을 캐시해 두었다가 먼저 그려서
-    // Firestore 로딩 전 기본값이 번쩍이는 현상을 방지
-    let initial = window.PROFILE_CONFIG || {};
-    try {
-      const cached = localStorage.getItem("cached_profile_v1");
-      if (cached) initial = JSON.parse(cached);
-    } catch { /* 캐시가 깨졌으면 기본값 사용 */ }
-    applyProfile(initial);
-    reveal();
-  }
-
-  // 외부(Firebase 모듈)에서 사용할 API 노출
   window.LinkSite = {
     ICONS,
     iconNames: Object.keys(ICONS),
     applyProfile,
+    reveal,
     getProfile: () => current,
   };
-
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-  else boot();
 })();

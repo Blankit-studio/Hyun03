@@ -1,33 +1,47 @@
 rules_version = '2';
 
 // ============================================================
-//  Firestore 보안 규칙
-//  - 프로필은 누구나 읽을 수 있음(공개 페이지)
-//  - 쓰기는 아래 OWNER 이메일로 로그인한 사용자만 가능
+//  Firestore 보안 규칙 (멀티유저 프로필 플랫폼)
 //
-//  ⚠️ 아래 'shdblankit@gmail.com' 을 본인 관리자 계정 이메일로 바꾸세요.
-//     (firebase-config.js 의 OWNER_EMAIL 과 반드시 동일해야 합니다.)
+//  - 공개 프로필(public == true)은 누구나 읽기 가능
+//  - 비공개 프로필은 소유자(uid)만 읽기 가능
+//  - 프로필 생성/수정/삭제는 소유자 본인만 가능
+//  - 아이디(username) 문서는 선점 방식: 없을 때만 생성 가능, 덮어쓰기 불가
 //
-//  적용 방법:
-//   Firebase 콘솔 → Firestore Database → 규칙(Rules) 탭에
-//   이 내용을 붙여넣고 "게시(Publish)"
+//  적용: Firebase 콘솔 → Firestore Database → 규칙(Rules) → 붙여넣고 게시
 // ============================================================
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isOwner() {
-      return request.auth != null
-        && request.auth.token.email == 'shdblankit@gmail.com'
-        && request.auth.token.email_verified == true;
+    // 프로필: profiles/{uid}
+    match /profiles/{uid} {
+      allow read: if resource.data.public == true
+                  || (request.auth != null && request.auth.uid == uid);
+
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.username is string
+                    && request.resource.data.uid == uid;
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    // 아이디(username)는 생성 후 변경 불가
+                    && request.resource.data.username == resource.data.username;
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
-    // 프로필 문서 (site/profile)
-    match /site/{document} {
-      allow read: if true;        // 공개 읽기
-      allow write: if isOwner();  // 관리자만 쓰기
+    // 아이디 예약: usernames/{username} → { uid }
+    match /usernames/{name} {
+      allow read: if true;                 // 가용성 확인 / 조회용 공개
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+      allow update: if false;              // 한번 선점되면 덮어쓰기 불가
     }
 
-    // 그 외 모든 문서는 기본 차단
+    // 그 외 문서 차단
     match /{document=**} {
       allow read, write: if false;
     }

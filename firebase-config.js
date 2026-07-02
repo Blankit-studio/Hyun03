@@ -16,11 +16,6 @@ window.FIREBASE_CONFIG = {
   measurementId: "G-5CYBT5TW6C",
 };
 
-// 편집 권한을 가질 "관리자(나)"의 Google 계정 이메일.
-// 이 이메일로 로그인했을 때만 편집 패널이 열립니다.
-// (실제 쓰기 차단은 firestore.rules 의 보안 규칙이 담당합니다 —
-//  규칙에도 동일한 이메일을 넣어야 합니다.)
-window.OWNER_EMAIL = "shdblankit@gmail.com";
-
-// Firestore 에서 프로필을 저장할 문서 경로 (컬렉션/문서)
-window.PROFILE_DOC = { collection: "site", doc: "profile" };
+// ※ 멀티유저 플랫폼이라 별도의 "관리자 이메일" 설정은 필요 없습니다.
+//   로그인한 사용자는 각자 자신의 프로필만 만들고 편집할 수 있으며,
+//   권한 제어는 firestore.rules 의 보안 규칙(request.auth.uid 기반)이 담당합니다.
