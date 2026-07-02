@@ -48,7 +48,6 @@
       theme: Object.assign({}, d.theme, p.theme),
       background: Object.assign({}, d.background, p.background),
       showViews: p.showViews ?? d.showViews ?? false,
-      effects: Object.assign({}, d.effects, p.effects),
       links: p.links ?? d.links ?? [],
     };
   }
@@ -98,6 +97,12 @@
     // 링크
     const linksEl = $("links");
     linksEl.innerHTML = "";
+    if (!(cfg.links || []).length) {
+      const d = document.createElement("div");
+      d.className = "links-empty";
+      d.textContent = "등록된 링크가 없습니다";
+      linksEl.appendChild(d);
+    }
     (cfg.links || []).forEach((l) => {
       const a = document.createElement("a");
       a.className = "link";
@@ -148,15 +153,23 @@
   function reveal() {
     if (revealed) return;
     revealed = true;
-    $("app").classList.add("show");
+    // 첫 페인트 이후에 클래스를 붙여야 페이드인 트랜지션이 확실히 동작
+    requestAnimationFrame(() => requestAnimationFrame(() => $("app").classList.add("show")));
     animateLinks();
     bumpViews();
   }
 
   // ---------- 부팅 ----------
   function boot() {
-    applyProfile(window.PROFILE_CONFIG || {}); // 즉시 기본값 렌더
-    reveal(); // 입장 화면 없이 바로 표시
+    // 마지막으로 본 프로필을 캐시해 두었다가 먼저 그려서
+    // Firestore 로딩 전 기본값이 번쩍이는 현상을 방지
+    let initial = window.PROFILE_CONFIG || {};
+    try {
+      const cached = localStorage.getItem("cached_profile_v1");
+      if (cached) initial = JSON.parse(cached);
+    } catch { /* 캐시가 깨졌으면 기본값 사용 */ }
+    applyProfile(initial);
+    reveal();
   }
 
   // 외부(Firebase 모듈)에서 사용할 API 노출

@@ -36,9 +36,14 @@ async function boot() {
   let currentUser = null;
   const isOwner = (u) => u && (u.email || "").toLowerCase() === OWNER_EMAIL;
 
-  // 공개 프로필 실시간 구독 → 변경 시 자동 반영
+  // 공개 프로필 실시간 구독 → 변경 시 자동 반영 (+ 다음 방문을 위해 캐시)
   onSnapshot(profileRef,
-    (snap) => { if (snap.exists()) window.LinkSite.applyProfile(snap.data()); },
+    (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      try { localStorage.setItem("cached_profile_v1", JSON.stringify(data)); } catch { /* 저장 실패 무시 */ }
+      window.LinkSite.applyProfile(data);
+    },
     (err) => console.warn("[Firebase] 프로필 구독 오류(공개 읽기 규칙 확인):", err.code)
   );
 
@@ -86,9 +91,15 @@ async function boot() {
   function renderEditor(p) {
     closeEditor();
     p = p || {};
+    const baseline = JSON.parse(JSON.stringify(p)); // 저장 없이 닫을 때 되돌릴 상태
     const theme = p.theme || {};
     const bgc = p.background || {};
     const bioText = Array.isArray(p.bio) ? p.bio.join("\n") : (p.bio || "");
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "edit-backdrop";
+    backdrop.className = "edit-backdrop";
+    document.body.appendChild(backdrop);
 
     const panel = document.createElement("aside");
     panel.id = "edit-panel";
@@ -132,7 +143,7 @@ async function boot() {
       </div>
     `;
     document.body.appendChild(panel);
-    requestAnimationFrame(() => panel.classList.add("open"));
+    requestAnimationFrame(() => { backdrop.classList.add("open"); panel.classList.add("open"); });
 
     const linksWrap = panel.querySelector("#ep-links");
     (p.links || []).forEach((l) => linksWrap.appendChild(linkRow(l)));
@@ -148,9 +159,18 @@ async function boot() {
     }
     ensureTrailingRow();
 
-    panel.querySelector(".ep-close").onclick = closeEditor;
+    // 저장하지 않고 닫으면 미리보기를 원래 상태로 되돌림
+    function discardAndClose() {
+      window.LinkSite.applyProfile(baseline);
+      closeEditor();
+    }
+    panel.querySelector(".ep-close").onclick = discardAndClose;
+    backdrop.onclick = discardAndClose;
+    epKeyHandler = (e) => { if (e.key === "Escape") discardAndClose(); };
+    document.addEventListener("keydown", epKeyHandler);
+
     panel.querySelector("#ep-add").onclick = () => { linksWrap.appendChild(linkRow({ icon: "link", label: "", url: "" })); };
-    panel.querySelector("#ep-logout").onclick = async () => { await signOut(auth); closeEditor(); };
+    panel.querySelector("#ep-logout").onclick = async () => { await signOut(auth); discardAndClose(); };
     panel.querySelector("#ep-save").onclick = () => save(panel);
 
     // 입력 시: 빈 줄 자동 보충 + 실시간 미리보기
@@ -170,7 +190,11 @@ async function boot() {
       <input class="ep-label" type="text" placeholder="이름" value="${attr(l.label)}">
       <input class="ep-url" type="text" placeholder="https://..." value="${attr(l.url)}">
       <button class="ep-del" title="삭제">✕</button>`;
-    row.querySelector(".ep-del").onclick = () => { row.remove(); };
+    row.querySelector(".ep-del").onclick = () => {
+      const panel = row.closest("#edit-panel");
+      row.remove();
+      if (panel) panel.dispatchEvent(new Event("input")); // 미리보기 갱신 + 빈 줄 보충
+    };
     return row;
   }
 
@@ -217,9 +241,13 @@ async function boot() {
   }
 }
 
+let epKeyHandler = null;
 function closeEditor() {
   const p = document.getElementById("edit-panel");
+  const b = document.getElementById("edit-backdrop");
   if (p) { p.classList.remove("open"); setTimeout(() => p.remove(), 250); }
+  if (b) { b.classList.remove("open"); setTimeout(() => b.remove(), 250); }
+  if (epKeyHandler) { document.removeEventListener("keydown", epKeyHandler); epKeyHandler = null; }
 }
 
 // ---------------- 유틸 ----------------
