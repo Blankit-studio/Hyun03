@@ -262,8 +262,9 @@ body.page-landing { display: block; }
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   border-bottom: 1px solid var(--card-border);
 }
-.lp-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; color: var(--text); text-decoration: none; }
-.lp-logo { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent)); }
+.lp-brand { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 1.15rem; color: var(--text); text-decoration: none; }
+.lp-logo { display: inline-flex; filter: drop-shadow(0 0 7px rgba(43,143,255,0.45)); }
+.lp-logo svg { width: 26px; height: 26px; display: block; }
 
 /* ---------- 히어로 ---------- */
 .landing { max-width: 1040px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 40px) 80px; }
