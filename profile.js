@@ -92,7 +92,6 @@ function renderEditor(p) {
     <div class="edit-body">
       <div class="ep-handle">@${esc(p.username || uname)}</div>
       <label class="ep-field"><span>표시 이름</span><input id="ep-name" type="text" value="${attr(p.displayName)}"></label>
-      <label class="ep-check"><input id="ep-verified" type="checkbox" ${p.verified ? "checked" : ""}> 인증 뱃지 표시</label>
       <label class="ep-check"><input id="ep-public" type="checkbox" ${p.public !== false ? "checked" : ""}> 공개 (목록에 노출)</label>
       <label class="ep-field"><span>자기소개 (한 줄에 하나씩)</span><textarea id="ep-bio" rows="3">${esc(bioText)}</textarea></label>
       <label class="ep-field"><span>아바타 이미지 URL</span><input id="ep-avatar" type="text" value="${attr(p.avatar)}" placeholder="비우면 이니셜 표시"></label>
@@ -187,7 +186,6 @@ function collect(panel) {
   return {
     username: (profile && profile.username) || uname,
     displayName: panel.querySelector("#ep-name").value.trim() || uname,
-    verified: panel.querySelector("#ep-verified").checked,
     public: panel.querySelector("#ep-public").checked,
     bio,
     avatar: panel.querySelector("#ep-avatar").value.trim(),

@@ -44,7 +44,6 @@
     return {
       username: p.username || "",
       displayName: p.displayName || p.username || "이름 없음",
-      verified: !!p.verified,
       bio: p.bio || [],
       avatar: p.avatar || "",
       theme: Object.assign({}, DEFAULT_THEME, p.theme),
@@ -91,9 +90,8 @@
       img.hidden = true; fb.hidden = false; fb.textContent = initial;
     }
 
-    // 이름 / 핸들 / 뱃지
+    // 이름 / 핸들
     $("username-text").textContent = cfg.displayName;
-    $("verified-badge").hidden = !cfg.verified;
     const handleEl = $("handle");
     if (handleEl) { handleEl.textContent = cfg.username ? "@" + cfg.username : ""; handleEl.hidden = !cfg.username; }
     document.title = cfg.displayName + (cfg.username ? " (@" + cfg.username + ")" : "");

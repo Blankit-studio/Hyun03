@@ -130,7 +130,6 @@ obSubmit.addEventListener("click", async () => {
   obSubmit.disabled = true; obSubmit.textContent = "만드는 중…";
   const data = {
     displayName: currentUser.displayName || name,
-    verified: false,
     bio: [],
     avatar: currentUser.photoURL || "",
     theme: window.DEFAULT_THEME || {},
@@ -182,7 +181,7 @@ function cardFor(p) {
   a.style.setProperty("--a2", accent2);
   a.innerHTML = `
     ${avatar}
-    <div class="pcard-name">${esc(p.displayName || p.username)}${p.verified ? ' <span class="pcard-badge">✓</span>' : ""}</div>
+    <div class="pcard-name">${esc(p.displayName || p.username)}</div>
     <div class="pcard-handle">@${esc(p.username)}</div>
     ${bio ? `<div class="pcard-bio">${esc(bio)}</div>` : ""}
     <div class="pcard-links">${(p.links || []).length}개 링크</div>`;
