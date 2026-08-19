@@ -28,6 +28,11 @@ if (configured) {
 }
 export { auth, db };
 
+// 최초 인증 상태 복원을 1회 기다리는 프라미스 (null = 비로그인)
+export const authReady = configured
+  ? new Promise((res) => { const un = onAuthStateChanged(auth, (u) => { un(); res(u); }); })
+  : Promise.resolve(null);
+
 // ---------- 인증 ----------
 export function onAuth(cb) {
   if (!configured) { cb(null); return () => {}; }

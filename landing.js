@@ -60,9 +60,11 @@ function updateAuthUI() {
 $("cta-create").addEventListener("click", async () => {
   if (!configured) return;
   if (!currentUser) {
-    try { await signInGoogle(); } catch (e) { alert("로그인 실패: " + (e.code || e.message)); return; }
-    // onAuth 가 myProfile 을 채운 뒤 사용자가 다시 누르도록 유도하지 않고 바로 이어감
-    try { myProfile = await getProfileByUid(currentUser?.uid || (await waitUser())); } catch { /* 무시 */ }
+    try {
+      const cred = await signInGoogle();      // 로그인 결과에서 바로 uid 확보
+      currentUser = cred.user;
+    } catch (e) { alert("로그인 실패: " + (e.code || e.message)); return; }
+    try { myProfile = await getProfileByUid(currentUser.uid); } catch { /* 무시 */ }
   }
   if (myProfile) {
     location.href = "profile.html?u=" + encodeURIComponent(myProfile.username);
@@ -70,14 +72,6 @@ $("cta-create").addEventListener("click", async () => {
     openOnboard();
   }
 });
-
-// signInWithPopup 직후 currentUser 반영이 약간 늦을 수 있어 보조
-function waitUser() {
-  return new Promise((res) => {
-    const t = setInterval(() => { if (currentUser) { clearInterval(t); res(currentUser.uid); } }, 60);
-    setTimeout(() => { clearInterval(t); res(currentUser?.uid); }, 3000);
-  });
-}
 
 // ---------- 온보딩 모달 ----------
 const onboard = $("onboard");

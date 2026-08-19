@@ -2,7 +2,7 @@
 //  프로필 페이지: ?u=아이디 로 프로필을 불러와 표시.
 //  본인(소유자)이 보면 편집 패널이 열립니다.
 // ============================================================
-import { configured, onAuth, getProfileByUsername, saveProfile } from "./core.js";
+import { configured, onAuth, authReady, getProfileByUsername, saveProfile } from "./core.js";
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -22,9 +22,10 @@ try {
   if (cached) { window.LinkSite.applyProfile(cached); window.LinkSite.reveal(); }
 } catch { /* 무시 */ }
 
-// 프로필 로드
+// 프로필 로드 (인증 복원을 먼저 기다려야 비공개 프로필도 소유자에게 정상 표시됨)
 (async function load() {
   if (!configured) { showNotFound("Firebase 설정이 필요합니다", "firebase-config.js 를 설정하세요."); return; }
+  try { currentUser = await authReady; } catch { /* 무시 */ }
   try {
     const p = await getProfileByUsername(uname);
     if (!p) { showNotFound(); return; }
@@ -39,6 +40,7 @@ try {
   }
 })();
 
+// 이후 로그인/로그아웃(예: 편집 패널에서 로그아웃) 시 소유자 UI 갱신
 onAuth((user) => { currentUser = user; refreshOwnerUI(); });
 
 function refreshOwnerUI() {
