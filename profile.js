@@ -182,7 +182,8 @@ function collect(panel) {
   const links = [...panel.querySelectorAll(".ep-link-row")].map((r) => ({
     icon: r.querySelector(".ep-icon").value,
     label: r.querySelector(".ep-label").value.trim(),
-    url: r.querySelector(".ep-url").value.trim(),
+    // 위험한 스킴 차단 + 스킴 없으면 https:// 보정한 뒤 저장
+    url: window.LinkSite.safeUrl(r.querySelector(".ep-url").value),
   })).filter((l) => l.url);
   const bio = panel.querySelector("#ep-bio").value.split("\n").map((s) => s.trim()).filter(Boolean);
   return {
@@ -206,6 +207,7 @@ function collect(panel) {
 }
 
 async function save(panel) {
+  if (!currentUser) { toast("로그인이 만료되었어요. 다시 로그인해 주세요."); return; }
   const data = collect(panel);
   const btn = panel.querySelector("#ep-save");
   btn.disabled = true; btn.textContent = "저장 중…";

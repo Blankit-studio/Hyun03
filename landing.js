@@ -160,24 +160,48 @@ obSubmit.addEventListener("click", async () => {
   }
 })();
 
+// 아바타 URL 검증: http(s) / data:image 만 허용
+function safeMediaUrl(raw) {
+  const u = String(raw || "").trim();
+  if (!u) return "";
+  if (/^https?:\/\//i.test(u) || /^data:image\//i.test(u)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return "";
+  return "https://" + u;
+}
+
 function cardFor(p) {
   const a = document.createElement("a");
   a.className = "pcard";
   a.href = "profile.html?u=" + encodeURIComponent(p.username);
   const accent = (p.theme && p.theme.accent) || "#7c5cff";
   const accent2 = (p.theme && p.theme.accent2) || "#22d3ee";
-  const initial = esc((p.displayName || p.username || "?").charAt(0).toUpperCase());
+  const initial = (p.displayName || p.username || "?").charAt(0).toUpperCase();
   const bio = Array.isArray(p.bio) ? p.bio.filter(Boolean).join(" · ") : (p.bio || "");
-  const avatar = p.avatar
-    ? `<img class="pcard-av" src="${esc(p.avatar)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'pcard-av fallback',textContent:'${initial}'}))">`
-    : `<div class="pcard-av fallback">${initial}</div>`;
   a.style.setProperty("--a", accent);
   a.style.setProperty("--a2", accent2);
   a.innerHTML = `
-    ${avatar}
     <div class="pcard-name">${esc(p.displayName || p.username)}</div>
     <div class="pcard-handle">@${esc(p.username)}</div>
     ${bio ? `<div class="pcard-bio">${esc(bio)}</div>` : ""}
     <div class="pcard-links">${(p.links || []).length}개 링크</div>`;
+
+  // 아바타는 DOM 으로 생성(인라인 onerror 없이) → 이름에 따옴표가 있어도 안전
+  const fallback = () => {
+    const d = document.createElement("div");
+    d.className = "pcard-av fallback";
+    d.textContent = initial;
+    return d;
+  };
+  const src = safeMediaUrl(p.avatar);
+  let av;
+  if (src) {
+    av = document.createElement("img");
+    av.className = "pcard-av";
+    av.src = src; av.alt = ""; av.loading = "lazy";
+    av.onerror = () => av.replaceWith(fallback());
+  } else {
+    av = fallback();
+  }
+  a.prepend(av);
   return a;
 }

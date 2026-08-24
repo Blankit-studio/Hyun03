@@ -35,6 +35,25 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // 링크 URL 정규화: 위험한 스킴(javascript: 등) 차단 + 스킴 없으면 https:// 보정
+  const SAFE_SCHEME = /^(https?:|mailto:|tel:)/i;
+  function safeUrl(raw) {
+    const u = String(raw || "").trim();
+    if (!u) return "";
+    if (SAFE_SCHEME.test(u)) return u;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return "";   // 그 외 스킴(javascript:, data: ...) 차단
+    if (u.startsWith("//") || u.startsWith("/") || u.startsWith("#")) return "";
+    return "https://" + u;                            // 예: "github.com/me" → https 보정
+  }
+  // 이미지/미디어 URL: http(s) 와 data:image 만 허용
+  function safeMediaUrl(raw) {
+    const u = String(raw || "").trim();
+    if (!u) return "";
+    if (/^https?:\/\//i.test(u) || /^data:image\//i.test(u)) return u;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return "";
+    return "https://" + u;
+  }
+
   const DEFAULT_THEME = window.DEFAULT_THEME || { accent: "#7c5cff", accent2: "#22d3ee", background: "#0a0a0f" };
   let revealed = false;
   let current = {};
@@ -70,11 +89,13 @@
     bg.className = "bg";
     bg.style.backgroundImage = "";
     bg.innerHTML = "";
-    if (b.type === "image" && b.src) {
-      bg.style.backgroundImage = `url("${b.src}")`;
-    } else if (b.type === "video" && b.src) {
+    const bgSrc = safeMediaUrl(b.src);
+    if (b.type === "image" && bgSrc) {
+      // CSS 값 이스케이프로 url() 밖으로 빠져나가는 인젝션 차단
+      bg.style.backgroundImage = 'url("' + bgSrc.replace(/["\\]/g, "\\$&") + '")';
+    } else if (b.type === "video" && bgSrc) {
       const v = document.createElement("video");
-      v.src = b.src; v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
+      v.src = bgSrc; v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
       bg.appendChild(v);
     } else {
       bg.classList.add("gradient");
@@ -83,8 +104,9 @@
     // 아바타
     const img = $("avatar-img"), fb = $("avatar-fallback");
     const initial = (cfg.displayName || cfg.username || "?").trim().charAt(0).toUpperCase();
-    if (cfg.avatar) {
-      img.src = cfg.avatar; img.hidden = false; fb.hidden = true;
+    const avatarSrc = safeMediaUrl(cfg.avatar);
+    if (avatarSrc) {
+      img.src = avatarSrc; img.hidden = false; fb.hidden = true;
       img.onerror = () => { img.hidden = true; fb.hidden = false; fb.textContent = initial; };
     } else {
       img.hidden = true; fb.hidden = false; fb.textContent = initial;
@@ -106,10 +128,12 @@
       linksEl.appendChild(d);
     }
     cfg.links.forEach((l) => {
+      const href = safeUrl(l.url);
+      if (!href) return;                                  // 차단된 URL 은 렌더하지 않음
       const a = document.createElement("a");
       a.className = "link";
-      a.href = l.url || "#";
-      a.target = (l.url || "").startsWith("mailto:") ? "_self" : "_blank";
+      a.href = href;
+      a.target = /^(mailto:|tel:)/i.test(href) ? "_self" : "_blank";
       a.rel = "noopener noreferrer";
       a.innerHTML =
         `<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${getIcon(l.icon)}</svg>` +
@@ -152,6 +176,8 @@
   window.LinkSite = {
     ICONS,
     iconNames: Object.keys(ICONS),
+    safeUrl,
+    safeMediaUrl,
     applyProfile,
     reveal,
     getProfile: () => current,
